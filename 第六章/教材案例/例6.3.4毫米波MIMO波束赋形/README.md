@@ -1,4 +1,6 @@
 # GLNN
+此案例的源仓库[链接](https://github.com/tp1000d/GLNN)
+
 This repository is the Python implementation of paper _"[Robust Beamforming with Gradient-based Liquid Neural Network](https://ieeexplore.ieee.org/document/10620247)"_.
 
 ## Blog
