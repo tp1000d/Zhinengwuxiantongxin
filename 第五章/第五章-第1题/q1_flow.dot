@@ -1,0 +1,47 @@
+digraph G {
+  graph [rankdir=TB, fontname="Noto Sans CJK SC", fontsize=13, nodesep=0.35, ranksep=0.32, compound=true, pad=0.5, labeljust="l"];
+  node  [shape=box, style="rounded,filled", fontname="Noto Sans CJK SC", fontsize=11, fillcolor="#FFFFFF", color="#5B6B7F", penwidth=1.1, margin="0.18,0.07"];
+  edge  [color="#5B6B7F", arrowsize=0.7, fontname="Noto Sans CJK SC", fontsize=10];
+
+  start [label="明确需求：室外城市场景（如浙大紫金港校区）\n频段 3.5 / 28 GHz、带宽、子载波数；下游任务（波束预测、定位、信道估计）", shape=box, style="rounded,filled", fillcolor="#E8EEF6"];
+
+  subgraph cluster_pre {
+    label="一、场景预处理（5.2.1 节）"; style="rounded,filled"; fillcolor="#F4F7FB"; color="#9AA9BC";
+    map   [label="① 地图数据获取\nOSM/GIS 框选区域 → 建筑轮廓 + 高度（LoD1）\n无人机倾斜摄影 / LiDAR 点云、CAD 图纸 → LoD2 细节"];
+    model [label="② 三维场景重建\nBlender + OSM 插件导出 Mitsuba XML / Wireless InSite 模型\n地面、道路、建筑；按需求取舍窗户、树木、车辆（静态 / 动态）"];
+    mat   [label="③ 材质（电磁参数）赋值\n按 ITU-R P.2040 为混凝土、玻璃、金属、地面赋 ε_r、σ(f)（表 5.1）\n设定厚度、粗糙度 → 散射系数 S、交叉极化系数 XPD"];
+    ant   [label="④ 天线系统配置\n基站位置 / 高度 / 朝向（下倾角）；阵列形式 ULA / UPA / UCA\n阵元数、间距 λ/2、方向图（3GPP 38.901 / 偶极子）、极化；UE 天线"];
+    ue    [label="⑤ 用户撒点\n均匀网格（如 0.2 m 间隔）或随机撒点；高度 1.5~2 m\n剔除落在建筑内部的点；动态场景给出速度与轨迹"];
+    map -> model -> mat -> ant -> ue;
+  }
+
+  subgraph cluster_rt {
+    label="二、射线追踪算法（5.2.2 节）"; style="rounded,filled"; fillcolor="#F6F8F2"; color="#A7B48F";
+    algo  [label="⑥ 选择算法与参数\n发射射线法 SBR（大场景、覆盖图） / 镜像法（点对点、高精度）\n最大反射深度、射线数（角分辨率）、是否开启绕射 / 漫散射 / 透射"];
+    accel [label="⑦ 构建加速结构\nBVH / 八叉树划分场景三角面片，GPU 并行求交"];
+    shoot [label="⑧ 发射射线并求交\n射线与三角面片求交，找到最近交点（判断是否遇到障碍物）"];
+    inter [label="⑨ 计算交互\n反射 / 折射：斯涅耳定律 + 菲涅耳系数（式 5.1~5.3）\n散射：朗伯 / 方向性模型（式 5.4~5.6）；绕射：UTD 系数（式 5.10）\n更新幅度、相位、极化", fillcolor="#FFFFFF"];
+    stop  [label="达到最大深度 / 功率低于阈值\n/ 射线离开场景？", shape=diamond, style="filled", fillcolor="#FFF6E5", color="#C9A15A", margin="0.05,0.03"];
+    rx    [label="⑩ 接收判定与路径校验\nSBR：接收球判定并去重；镜像法：反射点几何校验"];
+    out   [label="⑪ 输出多径参数（每条路径 m）\n复振幅 a_m、时延 τ_m、AoD / AoA（方位角、俯仰角）\nLoS / NLoS 标记、交互类型与交互点坐标"];
+    algo -> accel -> shoot -> inter -> stop;
+    stop -> shoot [label="  否：继续追踪", fontcolor="#8A6D3B"];
+    stop -> rx   [label="是"];
+    rx -> out;
+  }
+
+  subgraph cluster_post {
+    label="三、数据生成、校验与发布（5.2.3 节、5.3 节、5.4 节）"; style="rounded,filled"; fillcolor="#FBF5F5"; color="#C2A0A0";
+    chan  [label="⑫ 信道合成\n路径参数 × 阵列响应 → OFDM 频域信道 H[k]、CIR h(τ)（式 5.13~5.14）\n路径增益 PG、路径损耗、覆盖图（式 5.11~5.16）"];
+    check [label="⑬ 质量校验\n与 3GPP 38.901 UMi 路损基线（式 5.18~5.20）或实测数据对比\n检查 LoS 比例、时延 / 角度扩展是否合理；可视化抽查", fillcolor="#FFFFFF"];
+    ok    [label="误差可接受？", shape=diamond, style="filled", fillcolor="#FFF6E5", color="#C9A15A"];
+    save  [label="⑭ 存储与发布\nHDF5 / .mat / .npy + 元数据（场景、频率、天线、版本）\n划分训练 / 验证 / 测试集；隐私脱敏与合规（5.4 节）", fillcolor="#E8F3EA"];
+    chan -> check -> ok;
+    ok -> save [label="是"];
+  }
+
+  start -> map;
+  ue -> algo [lhead=cluster_rt];
+  out -> chan [lhead=cluster_post];
+  ok -> mat [label="否：校准材质参数、\n增大反射深度 / 射线数", fontcolor="#8A6D3B", constraint=false, style=dashed];
+}

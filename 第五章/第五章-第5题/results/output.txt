@@ -1,0 +1,31 @@
+对象名: Altes_Rathaus-itu_marble | 当前载波频率: [3.5e+09] Hz
+--- 修改前 ---
+材质名称 name                 : marble
+ITU 材料类型 itu_type          : marble
+相对介电常数 relative_permittivity: [7.074]
+电导率 conductivity [S/m]      : [0.0175501]
+厚度 thickness [m]             : [0.1]
+散射系数 scattering_coefficient : [0]
+交叉极化系数 xpd_coefficient    : [0]
+散射方向图 scattering_pattern   : LambertianPattern
+显示颜色 color                 : (0.7009999752044678, 0.6439999938011169, 0.48500001430511475)
+--- 修改后 ---
+材质名称 name                 : itu_concrete
+ITU 材料类型 itu_type          : concrete
+相对介电常数 relative_permittivity: [5.24]
+电导率 conductivity [S/m]      : [0.123087]
+厚度 thickness [m]             : [0.1]
+散射系数 scattering_coefficient : [0]
+交叉极化系数 xpd_coefficient    : [0]
+散射方向图 scattering_pattern   : LambertianPattern
+显示颜色 color                 : (0.5389999747276306, 0.5389999747276306, 0.5389999747276306)
+--- 修改后（载波 28 GHz） ---
+材质名称 name                 : itu_concrete
+ITU 材料类型 itu_type          : concrete
+相对介电常数 relative_permittivity: [5.24]
+电导率 conductivity [S/m]      : [0.62605]
+厚度 thickness [m]             : [0.1]
+散射系数 scattering_coefficient : [0]
+交叉极化系数 xpd_coefficient    : [0]
+散射方向图 scattering_pattern   : LambertianPattern
+显示颜色 color                 : (0.5389999747276306, 0.5389999747276306, 0.5389999747276306)
